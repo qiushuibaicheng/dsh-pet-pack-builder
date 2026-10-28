@@ -112,46 +112,6 @@ python skills/dsh-pet-pack-builder/scripts/make_config.py \
 
 ---
 
-## 参数速查
-
-| 需求 | 怎么做 |
-|---|---|
-| 只重转某几段 | `encode.py --clips 待机 点击` |
-| 更清晰 / 更小 | `--crf 18`（大一圈）/ `--crf 26`（省四成，肉眼几乎无差） |
-| 素材没有右下角水印 | `--no-watermark` |
-| 伞面、泡泡上有灰绿脏块 | `--deglass`（见下） |
-| 镜子/玻璃板抠成空心框 | `scripts/glass_prop.py`（见下） |
-| 素材不是 16:9 | 不用管，`encode.py` 自动补透明边 |
-| 背景没抠干净 | 调 `source-profile.json` 里的 `hue_lo`/`hue_hi`/`sat_min`，重跑 encode |
-| 角色身上出现透明洞 | 调大 `core_force`，或放宽 `sat_min` |
-| 轮廓外一圈绿边 | 调大 `rim_px` |
-
-### 半透明道具的两个专项处理
-
-绿幕透过半透明塑料/玻璃的绿是**低饱和**的，抠像时不会被判成绿幕，成品里会出现两类瑕疵：
-
-**① 伞面 / 泡泡上的灰绿「脏块」** —— 加 `--deglass`：
-
-```sh
-python scripts/encode.py --src <素材> --out <输出> --clips 乘伞滑行 --deglass
-```
-
-判据是「G 略高于 R/B + 饱和度很低 + 亮度不低」，把这些像素的 alpha 归零，颜色交给外渗补邻近的塑料色。
-
-**② 镜子 / 玻璃板整块被抠空，只剩一个空心框** —— 用 `glass_prop.py` 重建：
-
-```sh
-python scripts/glass_prop.py --src <素材目录> --clip <片段名> --out <输出目录> \
-    --bbox 770,30,1250,690
-# 先不加 --encode，看生成的 prev_glass_*.png（左边成品、右边红区＝识别到的镜面）
-# 镜面还发绿就调 --glass-alpha（默认 0.72），边缘多出玻璃就收 --bbox，满意后加 --encode
-```
-
-原理：镜框是不透明闭合轮廓 → 闭运算补细缝 → 填洞取整块镜面 → 每帧垫一层浅蓝白磨砂玻璃，
-绿色判为背景清掉，镜中的倒影（粉/白）原样保留。
-
----
-
 ## 成品指标
 
 `example/` 里 13 段实测（`check.py verify`）：
@@ -207,21 +167,7 @@ python scripts/glass_prop.py --src <素材目录> --clip <片段名> --out <输�
 - pet pack 配置字段：`skills/dsh-pet-pack-builder/references/petpack-schema.md`
 - 转码流水线原理：`skills/dsh-pet-pack-builder/references/pipeline.md`
 
-## 传到 GitHub
-
-```sh
-cd dsh-pet-pack-builder
-git init
-git add .
-git commit -m "dsh-pet pack builder + 13 段示例素材"
-git branch -M main
-git remote add origin https://github.com/<你的账号>/<仓库名>.git
-git push -u origin main
-```
-
-不想用命令行就在网页上新建仓库，把整个文件夹拖进上传框也行（文件总数 44 个）。
 
 ## 许可
 
-脚本和文档随便用（想正式点可以自己加个 MIT LICENSE）。`example/` 里的角色形象与素材仅作演示，
-不要拿去做商用素材；换成自己的视频时，注意你所用生成工具的条款。
+本项目中涉及的文件仅用于个人学习交流使用。
